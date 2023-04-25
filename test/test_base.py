@@ -39,6 +39,10 @@ def test_opebase():
     assert abs(b) == itvInt(3, 20)
     # inv
     assert ~b == itvInt(~-3, ~20)
+    # << & >>
+    c = itvInt(4, 16)
+    assert c >> 1 == itvInt(8, 32)
+    assert c << 1 == itvInt(2, 8)
 
 def test_nbit():
     b = itvSigned(8)
