@@ -7,6 +7,29 @@ def test_opebase():
     log.info("Here!!!")
     a = itvInt(3, 6)
     log.info(f"A = {a}")
+    assert a == itvInt(3, 6)
+    assert a != itvInt(0, 0)
+    assert a < itvInt(4, 6)
+    assert itvInt(2, 7) > a
+    # equality
+    assert itvInt(1, 1) == 1
+    # interval inclusion
+    assert a in itvInt(0, 10)
+    assert a not in itvInt(4, 5)
+    # itvInt constructor arrange in correct order
+    assert a < itvInt(6, 4)
+    assert itvInt(7, 2) > a
+    # add
+    assert a + 1 == itvInt(4, 7)
+    # sub
+    assert a - 1 == itvInt(2, 5)
+    # mul
+    assert a * 2 == itvInt(6, 12)
+    # div
+    assert a / 3 == itvInt(1, 2)
+    # mod
+    assert a % 1 == 0
+    assert a % 2 == itvInt(0, 1)
 
 def test_nbit():
     b = itvSigned(8)
