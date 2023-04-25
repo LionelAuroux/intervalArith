@@ -30,6 +30,15 @@ def test_opebase():
     # mod
     assert a % 1 == 0
     assert a % 2 == itvInt(0, 1)
+    # pow
+    assert a ** 2 == itvInt(9, 36)
+    # neg
+    assert -a == itvInt(-6, -3)
+    b = itvInt(-3, 20)
+    # abs
+    assert abs(b) == itvInt(3, 20)
+    # inv
+    assert ~b == itvInt(~-3, ~20)
 
 def test_nbit():
     b = itvSigned(8)

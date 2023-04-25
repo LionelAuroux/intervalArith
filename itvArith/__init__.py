@@ -116,7 +116,7 @@ class itvInt:
         intmax = max(abs(self.min), abs(self.max))
         return itvInt(intmin, intmax)
 
-    def __inv__(self):
+    def __invert__(self):
         intmin = min(~self.min, ~self.max)
         intmax = max(~self.min, ~self.max)
         return itvInt(intmin, intmax)
