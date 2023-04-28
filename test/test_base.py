@@ -10,6 +10,9 @@ def test_opebase():
     assert a == itvInt(3, 6)
     assert a != itvInt(0, 0)
     assert a < itvInt(4, 6)
+    assert not (a <= itvInt(3, 8))
+    assert a <= itvInt(3, 6)
+    assert itvInt(2, 8) <= a
     assert itvInt(2, 7) > a
     # equality
     assert itvInt(1, 1) == 1
@@ -41,8 +44,19 @@ def test_opebase():
     assert ~b == itvInt(~-3, ~20)
     # << & >>
     c = itvInt(4, 16)
-    assert c >> 1 == itvInt(8, 32)
-    assert c << 1 == itvInt(2, 8)
+    assert c >> 1 == itvInt(2, 8)
+    assert c << 1 == itvInt(8, 32)
+
+def test_ls():
+    a = itvAndList()
+    assert len(a) == 0
+    a.append(itvInt(1, 5))
+    a.append(itvInt(7, 10))
+    assert a == [itvInt(1, 5), itvInt(7, 10)]
+    a = itvAndList()
+    a.append(itvInt(1, 7))
+    a.append(itvInt(5, 10))
+    assert a == [itvInt(1, 10)]
 
 def test_nbit():
     b = itvSigned(8)
