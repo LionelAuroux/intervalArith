@@ -3,6 +3,22 @@ import logging
 
 log = logging.getLogger(__name__)
 
+def test_syntax():
+    d = Decl(
+        _1 = Var("a", 2600, itvI16()),
+        _2 = Fun("=", TypeVar('T'), TypeVar('T')),
+        _3 = Fun("f", TypeNamed("t1"), itvI8()),
+        _4 = Fun("f", TypeNamed("t2"), itvI16()),
+    ).block([
+        ["=", "a", Val(12, itvI8())], # a = 12
+        ["f", "b", "a"], # b = f(a)
+    ])
+    log.info(f"DECL {d._decls}")
+    assert "a" in d._decls, "Failed to found `a` in context."
+    assert "f" in d._decls, "Failed to found `f` in context."
+    typed_ast = d.check() # check ast and return typed AST
+    log.info(f"Typed AST {typed_ast}")
+
 def test_opebase():
     log.info("Here!!!")
     a = itvInt(3, 6)

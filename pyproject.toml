@@ -1,8 +1,10 @@
-[build-system]
-requires = ["setuptools", "wheel"]
-
-[project]
+[tool.poetry]
 name = "itvArith"
-version = "0.0.1"
-dependencies = [
-]
+version = "0.1.0"
+description = ""
+authors = ["iopi <lionel.auroux@gmail.com>"]
+packages = [{include = "itvArith"}]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
