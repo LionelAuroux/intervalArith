@@ -97,7 +97,7 @@ class Def:
                 # handle overloading
                 if v._name not in self._decls:
                     self._decls[v._name] = []
-                log.info(f"Decl {v._name} in context {id(self._decls)}")
+                log.info(f"Def {v._name} in context {id(self._decls)}")
                 self._decls[v._name].append(v)
 
     def block(self, stmts) -> 'Decl':
@@ -246,4 +246,4 @@ class Def:
             log.warning(f"LAST {res[-1]}")
         return res
 
-__all__ = ['Val', 'Var', 'Fun', 'Def']
+__all__ = ['Val', 'Var', 'Fun', 'Def', 'AltTypeExpr', 'FunExpr']
