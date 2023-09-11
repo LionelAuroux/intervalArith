@@ -32,6 +32,7 @@ class Fun:
     """
     def __init__(self, name, *types):
         self._name = name
+        #FIXME: rajouter le traitement des noms de paramètres et valeur par défaut
         self._types = types
 
     def __repr__(self):
@@ -53,7 +54,7 @@ class FunExpr:
         lr = [repr(it) for it in self._params[1:]]
         txt = "()"
         if len(self._params):
-            txt = "({', '.join(lr)}) : {self._params[0]}"
+            txt = f"({', '.join(lr)}) : {self._params[0]}"
         return f"{self._name}{txt}"
 
 class AltTypeExpr:
@@ -68,15 +69,29 @@ class AltTypeExpr:
 
     def __repr__(self):
         lr = [repr(it) for it in self._alt]
-        return f"({'|'.join(lr)})"
+        return f"({'^'.join(lr)})"
 
-class Decl:
-    def __init__(self, **kw):
-        self._exprs = kw
+class Def:
+    def __init__(self, name=None, t=None, **kw):
+        """
+        Définition d'une fonction
+        """
+        self._name = name
+        self._type = t
         self._decls = {}
         #FIXME: le cache de typevar devrais être par résolution de fonction
         self._typevars = {}
-        for v in self._exprs.values():
+        self.add_defs(kw)
+
+    def globals(self, **kw):
+        """
+        Déclaration globales visible dans le block
+        """
+        self.add_defs(kw)
+        return self
+
+    def add_defs(self, kw):
+        for v in kw.values():
             if hasattr(v, "_name"):
                 log.info(f"NAME {v._name}")
                 # handle overloading
@@ -201,6 +216,7 @@ class Decl:
                 candidates = self._decls[fname].copy()
                 alt = AltTypeExpr()
                 for c in candidates:
+                    # FIXME: rajouter des contextes pour le mapping des TypeVars
                     log.warning(f"Cand {c}")
                     # check last parameter of candidates as ellipsis
                     if len(c._types) < len(fexpr) and type(c._types[-1]) is not Ellipsis:
@@ -224,9 +240,10 @@ class Decl:
     def check(self):
         res = []
         # for each statements
+        # FIXME: rajouter un contexte pour les intervals
         for stmt in self._stmts:
             res.append(self.check_expr(stmt))
             log.warning(f"LAST {res[-1]}")
         return res
 
-__all__ = ['Val', 'Var', 'Fun', 'Decl']
+__all__ = ['Val', 'Var', 'Fun', 'Def']

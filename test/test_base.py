@@ -4,7 +4,7 @@ import logging
 log = logging.getLogger(__name__)
 
 def test_syntax():
-    d = Decl(
+    d = Def().globals(
         _1 = Var("a", 2600, itvI16()),
         _2 = Fun("=", TypeVar('T'), TypeVar('T')),
         _3 = Fun("f", TypeNamed("t1"), itvI8()),
