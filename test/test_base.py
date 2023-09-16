@@ -5,17 +5,22 @@ log = logging.getLogger(__name__)
 
 def test_syntax():
     d = Def().globals(
+        # a = 2600:I16
         _1 = Var("a", 2600, itvI16()),
-        _2 = Fun("=", TypeVar('T'), TypeVar('T')),
-        _3 = Fun("f", TypeNamed("t1"), itvI8()),
-        _4 = Fun("f", TypeNamed("t2"), itvI16()),
+        # `=`(T)->T
+        _2 = Fun("=", Param(t=TypeVar('T')), Param(t=TypeVar('T'))),
+        # f(I8)->t1
+        _3 = Fun("f", Param(t=TypeNamed("t1")), Param(t=itvI8())),
+        # f(i16)->t2
+        _4 = Fun("f", Param(t=TypeNamed("t2")), Param(t=itvI16())),
     ).block([
-        ["=", "a", Val(12, itvI8())], # a = 12
+        ["=", "a", Val(12, itvI8())], # a = 12:I8
         ["f", "b", "a"], # b = f(a)
     ])
     log.info(f"DECL {d._decls}")
     assert "a" in d._decls, "Failed to found `a` in context."
     assert "f" in d._decls, "Failed to found `f` in context."
+    assert "=" in d._decls, "Failed to found `=` in context."
     typed_ast = d.check() # check ast and return typed AST
     log.info(f"Typed AST {typed_ast}")
 
