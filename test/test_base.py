@@ -10,19 +10,28 @@ def test_syntax():
         # `=`(T)->T
         _2 = Fun("=", Param(t=TypeVar('T')), Param(t=TypeVar('T'))),
         # f(I8)->t1
-        _3 = Fun("f", Param(t=TypeNamed("t1")), Param(t=itvI8())),
+        _3 = Fun("f", Param(t=TypeNamed("t1")), Param(t=TypeNamed("t2"))),
         # f(i16)->t2
         _4 = Fun("f", Param(t=TypeNamed("t2")), Param(t=itvI16())),
+        # x:t2
+        _5 = Var("x", None, TypeNamed("t2")),
     ).block([
         ["=", "a", Val(12, itvI8())], # a = 12:I8
-        ["f", "b", "a"], # b = f(a)
+        ["f", "b", "x"], # b = f(x)
     ])
     log.info(f"DECL {d._decls}")
     assert "a" in d._decls, "Failed to found `a` in context."
+    assert "x" in d._decls, "Failed to found `x` in context."
     assert "f" in d._decls, "Failed to found `f` in context."
     assert "=" in d._decls, "Failed to found `=` in context."
     typed_ast = d.check() # check ast and return typed AST
-    log.info(f"Typed AST {typed_ast}")
+    for idx, t in enumerate(typed_ast):
+        log.info(f"Typed AST {idx}: {t}")
+    # type de l'affectation est le type de a
+    assert typed_ast[0].is_typed
+    log.info(f"EXPR {type(typed_ast[0])}")
+    log.info(f"EXPR2 {type(typed_ast[0].reftype)}")
+    assert type(typed_ast[0].reftype) is itvInt
 
 def test_opebase():
     log.info("Here!!!")

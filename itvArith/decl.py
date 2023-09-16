@@ -1,4 +1,5 @@
 from itvArith.itv import *
+from itertools import product
 import logging
 
 log = logging.getLogger(__name__)
@@ -88,7 +89,6 @@ class FunExpr:
     Function call expression
 
     -Construit pendant le typage
-    -Collect et résoud les alternatives
     """
     def __init__(self, name, *args):
         self._name = name
@@ -105,6 +105,13 @@ class FunExpr:
     def add(self, arg):
         self._args.append(arg)
 
+    @property
+    def reftype(self):
+        t = self._args[0]
+        if hasattr(t, 'reftype'):
+            return t.reftype
+        return t
+
     def __repr__(self):
         lr = [repr(it) for it in self._args[1:]]
         txt = "()"
@@ -115,6 +122,8 @@ class FunExpr:
 class AltTypeExpr:
     """
     Type alternatives
+
+    -Collect et résoud les alternatives
     """
     def __init__(self):
         self._alts = []
@@ -125,14 +134,16 @@ class AltTypeExpr:
     def insert(self, alts):
         self._alts += alts
 
-    def intersect(self, oth):
-        if type(oth) is not AltTypeExpr:
-            raise RuntimeError(f"intersect with another AltTypeExpr")
-        alt = []
-        for a1, a2 in zip(self._alts, oth._alts):
-            if a1 == a2:
-                alt.append(a1)
-        return alt
+    @property
+    def is_typed(self):
+        return len(self._alts) == 1
+
+    @property
+    def reftype(self):
+        t = self._alts[0]
+        if hasattr(t, 'reftype'):
+            return t.reftype
+        return t
 
     def __repr__(self):
         lr = [repr(it) for it in self._alts]
@@ -199,7 +210,8 @@ class Def:
         ou une relation de covariance
         """
         if p_cand._name == p_expr._name:
-            return p_expr.copy()
+            return p_expr
+        return None
         raise RuntimeError(f"Can't find CTOR {type(p_expr)} to {type(p_cand)}")
 
     def check_itv(self, p_cand, p_expr):
@@ -208,29 +220,40 @@ class Def:
         """
         # covariance des intervales
         if p_expr <= p_cand:
-            return p_expr.copy()
+            return p_cand
+        return None
         raise RuntimeError(f"Can't coerce {type(p_expr)} and {type(p_cand)}")
 
     def check_intersect_left(self, p_cand, p_expr):
         """
         Intersection de la gauche avec un ensemble de type à droite
         """
+        return None
         raise RuntimeError(f"Can't coerce {type(p_expr)} and {type(p_cand)}")
 
     def check_intersect_right(self, p_cand, p_expr):
         """
         Intersection un ensemble de type à gauche et un type à droite
         """
+        return None
         raise RuntimeError(f"Can't coerce {type(p_expr)} and {type(p_cand)}")
 
     def check_intersect(self, p_cand, p_expr):
         """
         Intersection 2 ensembles de type
         """
-        return p_cand.intersect(p_expr)
+        alt = AltTypeExpr()
+        log.info(f"INTERSECT {p_cand} and {p_expr}")
+        for a1, a2 in product(p_cand._alts, p_expr._alts):
+            coerce = self.check_param(a1, a2)
+            if coerce is not None:
+                alt.add(coerce)
+        if len(alt._alts) == 0:
+            return None
+        return alt
 
     def check_param(self, p_cand, p_expr):
-        log.warning(f"?? {p_cand} // {p_expr}")
+        log.warning(f"?? {type(p_cand)} // {type(p_expr)}")
         match (p_cand, p_expr):
             case (TypeVar(), _):
                 # on coerce avec un type générique à gauche donc on "prends" le type de p_expr (BottomUp)
@@ -241,6 +264,12 @@ class Def:
             case (TypeNamed(), TypeNamed()):
                 # check s'il existe une relation de covariance t1 > t2 ou un constructeur qu'on doit injecter
                 return self.check_ctor(p_cand, p_expr)
+            case (Param(), Var()):
+                # check un paramètre de fonction avec une variable... les types doivents coercent
+                return self.check_param(p_cand._type, p_expr._type)
+            case (Param(), Val()):
+                # check un paramètre de fonction avec une valeur... les types doivents coercent
+                return self.check_param(p_cand._type, p_expr._type)
             case (itvInt(), itvInt()):
                 # FIXME coerce interval Entier
                 return self.check_itv(p_cand, p_expr)
@@ -254,65 +283,30 @@ class Def:
                 # intersection un type précis avec un ensemble
                 return self.check_intersect_left(p_cand, p_expr)
             case (_, _):
-                raise RuntimeError(f"Failed to match {type(p_cand)} with {type(p_expr)}")
-        #match p_cand:
-        #    case TypeVar():
-        #        # FIXME
-        #        # on coerce avec un type générique donc on "prends" le type de p_expr (BottomUp)
-        #        return self.assoc_left(p_cand, p_expr)
-        #    case TypeNamed():
-        #        match p_expr:
-        #            case TypeVar():
-        #                # FIXME
-        #                # on coerce avec un type générique donc on "prends" le type de p_cand (TopDown)
-        #                return self.assoc_right(p_cand, p_expr)
-        #            case TypeNamed():
-        #                # check s'il existe un constructeur t1 > t2
-        #                return self.check_ctor(p_cand, p_expr)
-        #            case AltTypeExpr():
-        #                # intersection un type nommé avec un ensemble
-        #                return self.check_intersect_left(p_cand, p_expr)
-        #    case itvInt():
-        #        match p_expr:
-        #            case TypeVar():
-        #                # FIXME
-        #                # on coerce avec un type générique donc on "prends" le type de p_cand (TopDown)
-        #                return self.assoc_right(p_cand, p_expr)
-        #            case itvInt():
-        #                # FIXME coerce interval
-        #                return self.check_itv(p_cand, p_expr)
-        #            case AltTypeExpr():
-        #                # intersection un interval avec un ensemble
-        #                return self.check_intersect_left(p_cand, p_expr)
-        #    case AltTypeExpr():
-        #        match p_expr:
-        #            case TypeVar():
-        #                # FIXME
-        #                # on coerce avec un type générique donc on "prends" le type de p_cand (TopDown)
-        #                return self.assoc_right(p_cand, p_expr)
-        #            case TypeNamed() | itvInt():
-        #                # intersection un ensemble et type nommé ou interval
-        #                return self.check_intersect_right(p_cand, p_expr)
-        #            case AltTypeExpr():
-        #                # intersection 2 ensembles
-        #                return self.check_intersect(p_cand, p_expr)
-        #    case _:
-        #        raise RuntimeError(f"Failed to match {type(p_cand)} to check_param")
+                return None
+        raise RuntimeError(f"Failed to match {type(p_cand)} with {type(p_expr)}")
 
     def lookup(self, expr):
         alt = AltTypeExpr()
+        log.info(f"LOOKUP {expr}")
         match expr:
             case str():
+                if expr not in self._decls:
+                    # ajoute la variable avec un TypeVar
+                    # FIXME: TypeVar in context
+                    self._decls[expr] = [Var(expr, None, TypeVar('T'))]
                 # cherche la variable dans les paramètres ou contextes des déclarations
-                if expr in self._decls:
-                    alt.insert(self._decls[expr])
+                alt.insert(self._decls[expr])
             case Val() | Var():
                 # retourne le type de la valeur
                 alt.add(expr)
             case AltTypeExpr():
+                log.info(f"just AltTypeExpr")
                 return expr
             case _:
+                return None
                 raise RuntimeError(f"Failed to lookup {type(expr)}")
+        log.info(f"get {alt}")
         return alt
 
     def check_expr(self, expr):
@@ -346,6 +340,7 @@ class Def:
                             log.warning(f"Try coerce {p_cand} with {p_expr}")
                             # coercion entre p_cand et p_expr
                             coerce_p = self.check_param(p_cand, p_expr)
+                            log.error(f"COERCE {coerce_p}")
                             if coerce_p is None:
                                 # abandonne ce candidat
                                 log.warning(f"NEXT CANDIDATE")
@@ -358,6 +353,7 @@ class Def:
                         continue
                 return alt
             case _:
+                return None
                 raise RuntimeError(f"Failed to match {type(expr)} candidates to expression")
 
     def check(self):
