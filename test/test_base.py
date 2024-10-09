@@ -4,6 +4,11 @@ import logging
 log = logging.getLogger(__name__)
 
 def test_syntax():
+    """
+    Utilise une approche d'EDSL pour éviter d'avoir à faire le parseur d'un langage.
+    Formalise les concepts fondamentaux d'un Type System d'un compilo.
+    """
+    # TODO: not clearly finish -> need Interval Arithmetic
     d = Def().globals(
         # a = 2600:I16
         _1 = Var("a", 2600, itvI16()),
@@ -34,6 +39,9 @@ def test_syntax():
     assert type(typed_ast[0].reftype) is itvInt
 
 def test_opebase():
+    """
+    Test les opérations fondamentales de l'arithmétique d'interval.
+    """
     log.info("Here!!!")
     a = itvInt(3, 6)
     log.info(f"A = {a}")
@@ -78,6 +86,9 @@ def test_opebase():
     assert c << 1 == itvInt(8, 32)
 
 def test_ls():
+    """
+    Test l'union de plusieurs interval
+    """
     a = itvAndList()
     assert len(a) == 0
     a.append(itvInt(1, 5))
@@ -89,6 +100,11 @@ def test_ls():
     assert a == [itvInt(1, 10)]
 
 def test_nbit():
+    """
+    Test les bornes d'un interval sur un nombre finit de bit pour simuler char,short,int,long.
+    Le code itvSigned et itvUnsigned s'adapte au nombre de bit.
+    Tester juste les bornes pour 8bit devrait suffire.
+    """
     b = itvSigned(8)
     log.info(f"B = {b}")
     assert b >= -128

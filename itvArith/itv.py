@@ -50,6 +50,7 @@ class itvInt(Type):
 
     # basic ordering operator
     def __lt__(self, oth):
+        # TODO: how to implem < of 2 interval?
         if type(oth) is int:
             return self.min < oth
         if isinstance(oth, itvInt):
@@ -58,6 +59,7 @@ class itvInt(Type):
         raise RuntimeError(f"Unhandled case")
 
     def __gt__(self, oth):
+        # TODO: how to implem > of 2 interval?
         if type(oth) is int:
             return self.max > oth
         if isinstance(oth, itvInt):
@@ -65,6 +67,7 @@ class itvInt(Type):
         raise RuntimeError(f"Unhandled case")
 
     def __eq__(self, oth):
+        # TODO: how to implem == of 2 interval?
         if type(oth) is int:
             return self.min == oth and self.max == oth
         if isinstance(oth, itvInt):
@@ -74,6 +77,7 @@ class itvInt(Type):
 
     # in
     def __contains__(self, oth):
+        # TODO: how to implem one interval include another ?
         if type(oth) is int:
             return oth >= self.min and oth <= self.max
         if isinstance(oth, itvInt):
@@ -82,6 +86,7 @@ class itvInt(Type):
 
     # + - / * %
     def __add__(self, oth):
+        # [a, b] + [c, d] -> [a+c, b+d]
         if type(oth) is int:
             return itvInt(self.min + oth, self.max + oth)
         if isinstance(oth, itvInt):
@@ -89,6 +94,7 @@ class itvInt(Type):
         raise RuntimeError(f"Unhandled case")
 
     def __sub__(self, oth):
+        # [a, b] - [c, d] -> [a-c, b-d]
         if type(oth) is int:
             return itvInt(self.min - oth, self.max - oth)
         if isinstance(oth, itvInt):
@@ -96,13 +102,25 @@ class itvInt(Type):
         raise RuntimeError(f"Unhandled case")
 
     def __mul__(self, oth):
+        # [a, b] * [c, d] -> 
+        # e = a * c
+        # f = a * d
+        # g = b * c
+        # h = b * d
+        # [min(e, f), max(e, f)]
         if type(oth) is int:
-            intmin = min(self.min * oth, self.max * oth)
-            intmax = max(self.min * oth, self.max * oth)
+            e = self.min * oth
+            f = self.max * oth
+            intmin = min(e, f)
+            intmax = max(e, f)
             return itvInt(intmin, intmax)
         if isinstance(oth, itvInt):
-            intmin = min(self.min * oth.min, self.min * oth.max, self.max * oth.min, self.max * oth.max)
-            intmax = max(self.min * oth.min, self.min * oth.max, self.max * oth.min, self.max * oth.max)
+            e = self.min * oth.min
+            f = self.min * oth.max
+            g = self.max * oth.min
+            h = self.max * oth.max
+            intmin = min(e, f, g, h)
+            intmax = max(e, f, g, h)
             return itvInt(intmin, intmax)
         raise RuntimeError(f"Unhandled case")
 
